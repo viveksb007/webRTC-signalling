@@ -1,4 +1,4 @@
-var conn = new WebSocket("ws://localhost:8080/socket");
+const conn = new WebSocket("ws://localhost:8080/socket");
 
 conn.onopen = function () {
     console.log("Connected to signalling server");
@@ -29,9 +29,9 @@ function send(message) {
     conn.send(JSON.stringify(message))
 }
 
-var peerConnection;
-var dataChannel;
-var input = document.getElementById("messageInput");
+let peerConnection;
+let dataChannel;
+const input = document.getElementById("messageInput");
 
 function initialize() {
     peerConnection = new RTCPeerConnection(null, {
