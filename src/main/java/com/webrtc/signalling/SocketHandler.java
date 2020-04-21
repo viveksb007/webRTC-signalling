@@ -22,16 +22,17 @@ public class SocketHandler extends TextWebSocketHandler {
 
     @Override
     protected void handleTextMessage(WebSocketSession session, TextMessage message) throws Exception {
-        synchronized (sessionMap.get(session.getId())) {
-            JsonObject payload = gson.fromJson(message.getPayload(), JsonObject.class);
-            JsonObject data = payload.getAsJsonObject("payload");
-            String targetSessionId = data.get("to").getAsString();
-            if (sessionMap.containsKey(targetSessionId)) {
-                sessionMap.get(targetSessionId).sendMessage(message);
-                logger.info("Sent message from {} to {}", session.getId(), targetSessionId);
-            } else {
-                logger.error("Can't find {} in session map", targetSessionId);
+        JsonObject payload = gson.fromJson(message.getPayload(), JsonObject.class);
+        JsonObject data = payload.getAsJsonObject("payload");
+        String targetSessionId = data.get("to").getAsString();
+        if (sessionMap.containsKey(targetSessionId)) {
+            WebSocketSession targetSession = sessionMap.get(targetSessionId);
+            synchronized (targetSession) {
+                targetSession.sendMessage(message);
             }
+            logger.info("Sent message from {} to {}", session.getId(), targetSessionId);
+        } else {
+            logger.error("Can't find {} in session map", targetSessionId);
         }
     }
 
