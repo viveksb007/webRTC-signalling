@@ -67,20 +67,19 @@ function getPeerConnection(id) {
 
 function makeOffer(id) {
     let pc = getPeerConnection(id);
-    pc.createOffer(function (offer) {
+    pc.createOffer().then(function (offer) {
         console.log("Creating offer for ", id);
-        send({
-            eventType: MESSAGE,
-            payload: {
-                by: currentId,
-                to: id,
-                type: payloadType.OFFER,
-                data: offer
-            }
+        pc.setLocalDescription(offer).then(() => {
+            send({
+                eventType: MESSAGE,
+                payload: {
+                    by: currentId,
+                    to: id,
+                    type: payloadType.OFFER,
+                    data: offer
+                }
+            });
         });
-        pc.setLocalDescription(offer);
-    }, function (error) {
-        console.log("error :", error);
     });
 }
 
@@ -90,7 +89,7 @@ function handleMessage(payload) {
     switch (payload.type) {
         case "offer":
             pc.setRemoteDescription(new RTCSessionDescription(data));
-            pc.createAnswer(function (answer) {
+            pc.createAnswer().then((answer) => {
                 pc.setLocalDescription(answer);
                 console.log("Sending answer to %s", payload.by);
                 send({
