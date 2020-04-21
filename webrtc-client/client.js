@@ -1,26 +1,30 @@
 const conn = new WebSocket("ws://localhost:8080/socket");
+const MESSAGE = "MESSAGE";
+const INIT = "INIT";
+const PEER_CONNECTED = "PEER.CONNECTED";
+const payloadType = {
+    OFFER: "offer",
+    ANSWER: "answer",
+    CANDIDATE: "candidate"
+}
 
 conn.onopen = function () {
     console.log("Connected to signalling server");
-    initialize();
 }
 
 conn.onmessage = function (message) {
-    console.log("Got message " + message.data);
-    const content = JSON.parse(message.data);
-    const event = content.event;
-    const data = content.data;
-    switch (event) {
-        case "offer":
-            handleOffer(data);
+    console.log("[Connection OnMessage] : ", JSON.stringify(JSON.parse(message.data), null, 2));
+    const data = JSON.parse(message.data);
+    switch (data.eventType) {
+        case INIT:
+            currentId = data.id;
+            console.log("My Id is %s", currentId);
             break;
-        case "answer":
-            handleAnswer(data);
+        case PEER_CONNECTED:
+            makeOffer(data.id);
             break;
-        case "candidate":
-            handleCandidate(data);
-            break;
-        default:
+        case MESSAGE:
+            handleMessage(data.payload);
             break;
     }
 }
@@ -29,79 +33,82 @@ function send(message) {
     conn.send(JSON.stringify(message))
 }
 
-let peerConnection;
-let dataChannel;
-const input = document.getElementById("messageInput");
+let peerConnections = {}
+let dataChannels = []
+let currentId;
 
-function initialize() {
-    peerConnection = new RTCPeerConnection(null, {
-        optional: [{
-            RtpDataChannels: true
-        }]
-    });
-
-    peerConnection.onicecandidate = function (event) {
+function getPeerConnection(id) {
+    if (peerConnections[id])
+        return peerConnections[id];
+    let pc = new RTCPeerConnection();
+    peerConnections[id] = pc;
+    pc.onicecandidate = function (event) {
         if (event.candidate) {
             send({
-                event: "candidate",
-                data: event.candidate
+                eventType: MESSAGE,
+                payload: {
+                    by: currentId,
+                    to: id,
+                    type: payloadType.CANDIDATE,
+                    data: event.candidate
+                }
             });
         }
     };
-
-    dataChannel = peerConnection.createDataChannel("dataChannel", {
+    let dataChannel = pc.createDataChannel("dataChannel", {
         reliable: true
     });
-
-    dataChannel.onerror = function (error) {
-        console.log("Error occurred on datachannel:", error);
-    };
-
     dataChannel.onmessage = function (event) {
-        console.log("message:", event.data);
-    };
-
-    dataChannel.onclose = function () {
-        console.log("data channel is closed");
-    };
+        console.log("message from  %s : %s", id, event.data);
+    }
+    dataChannels.push(dataChannel);
+    return pc;
 }
 
-function createOffer() {
-    peerConnection.createOffer(function (offer) {
+function makeOffer(id) {
+    let pc = getPeerConnection(id);
+    pc.createOffer(function (offer) {
+        console.log("Creating offer for ", id);
         send({
-            event: "offer",
-            data: offer
+            eventType: MESSAGE,
+            payload: {
+                by: currentId,
+                to: id,
+                type: payloadType.OFFER,
+                data: offer
+            }
         });
-        peerConnection.setLocalDescription(offer);
+        pc.setLocalDescription(offer);
     }, function (error) {
-        alert("Error in creating offer " + error);
+        console.log("error :", error);
     });
 }
 
-function handleOffer(offer) {
-    peerConnection.setRemoteDescription(new RTCSessionDescription(offer));
-    peerConnection.createAnswer(function (answer) {
-        peerConnection.setLocalDescription(answer);
-        send({
-            event: "answer",
-            data: answer
-        });
-    }, function (error) {
-        alert("Error creating answer " + error);
-    });
-}
-
-function handleCandidate(candidate) {
-    peerConnection.addIceCandidate(new RTCIceCandidate(candidate));
-}
-
-function handleAnswer(answer) {
-    peerConnection.setRemoteDescription(new RTCSessionDescription(answer));
-    console.log("connection established successfully!!");
-}
-
-function sendMessage() {
-    console.log(input.value);
-    dataChannel.send(input.value);
-    input.value = "";
+function handleMessage(payload) {
+    let pc = getPeerConnection(payload.by);
+    let data = payload.data;
+    switch (payload.type) {
+        case "offer":
+            pc.setRemoteDescription(new RTCSessionDescription(data));
+            pc.createAnswer(function (answer) {
+                pc.setLocalDescription(answer);
+                console.log("Sending answer to %s", payload.by);
+                send({
+                    eventType: MESSAGE,
+                    payload: {
+                        by: currentId,
+                        to: payload.by,
+                        type: payloadType.ANSWER,
+                        data: answer
+                    }
+                });
+            });
+            break;
+        case "answer":
+            pc.setRemoteDescription(new RTCSessionDescription(data));
+            break;
+        case "candidate":
+            pc.addIceCandidate(new RTCIceCandidate(data));
+            break;
+    }
 }
