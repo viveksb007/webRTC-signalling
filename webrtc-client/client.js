@@ -40,7 +40,11 @@ let currentId;
 function getPeerConnection(id) {
     if (peerConnections[id])
         return peerConnections[id];
-    let pc = new RTCPeerConnection();
+    let pc = new RTCPeerConnection(null, {
+        optional: [{
+            RtpDataChannels: true
+        }]
+    });
     peerConnections[id] = pc;
     pc.onicecandidate = function (event) {
         if (event.candidate) {
@@ -110,4 +114,14 @@ function handleMessage(payload) {
             pc.addIceCandidate(new RTCIceCandidate(data));
             break;
     }
+}
+
+let input = document.getElementById("messageInput");
+
+function sendMessage() {
+    console.log("My message %s", input.value);
+    dataChannels.forEach(function (channel) {
+        channel.send(input.value);
+    });
+    input.value = "";
 }
