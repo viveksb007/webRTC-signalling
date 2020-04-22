@@ -1,5 +1,5 @@
 const host = window.location.host;
-const conn = new WebSocket("ws://" + host + "/socket");
+const conn = new WebSocket("wss://" + host + "/socket");
 const MESSAGE = "MESSAGE";
 const INIT = "INIT";
 const PEER_CONNECTED = "PEER.CONNECTED";
