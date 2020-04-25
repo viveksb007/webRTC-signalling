@@ -2,8 +2,20 @@ import React from 'react';
 import './App.css';
 
 class App extends React.Component {
-    componentDidMount() {
 
+    constructor(props) {
+        super(props)
+        this.state = {
+            peerConnections: {},
+            dataChannels: [],
+            currentId: null
+        }
+    }
+
+    componentDidMount() {
+        const host = window.location.host;
+        const protocol = window.location.protocol;
+        const conn = new WebSocket(("https:" === protocol ? "wss://" : "ws://") + host + "/socket");
     }
 
     render() {
