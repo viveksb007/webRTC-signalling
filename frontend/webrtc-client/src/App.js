@@ -1,5 +1,6 @@
 import React from 'react';
 import './App.css';
+import { conn, MESSAGE, INIT, PEER_CONNECTED, payloadType } from './constants.js';
 
 class App extends React.Component {
 
@@ -13,9 +14,9 @@ class App extends React.Component {
     }
 
     componentDidMount() {
-        const host = window.location.host;
-        const protocol = window.location.protocol;
-        const conn = new WebSocket(("https:" === protocol ? "wss://" : "ws://") + host + "/socket");
+        conn.onopen = function () {
+            console.log("Connected to signalling server");
+        }
     }
 
     render() {
