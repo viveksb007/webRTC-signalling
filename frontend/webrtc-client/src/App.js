@@ -12,6 +12,10 @@ class App extends React.Component {
             currentId: null
         }
         this.sendMess = this.sendMess.bind(this);
+        this.handleMessage = this.handleMessage.bind(this);
+        this.makeOffer = this.makeOffer.bind(this);
+        this.getPeerConnection = this.getPeerConnection.bind(this);
+        this.sendMessage = this.sendMessage.bind(this);
     }
 
     componentDidMount() {
@@ -39,9 +43,9 @@ class App extends React.Component {
         }
     }
 
-    makeOffer(id) {
+    makeOffer = id => {
         let pc = this.getPeerConnection(id);
-        pc.createOffer().then(function (offer) {
+        pc.createOffer().then(offer => {
             console.log("Creating offer for ", id);
             pc.setLocalDescription(offer).then(() => {
                 this.sendMess({
@@ -57,13 +61,13 @@ class App extends React.Component {
         });
     }
 
-    handleMessage(payload) {
+    handleMessage = payload => {
         let pc = this.getPeerConnection(payload.by);
         let data = payload.data;
         switch (payload.type) {
             case "offer":
                 pc.setRemoteDescription(new RTCSessionDescription(data));
-                pc.createAnswer().then((answer) => {
+                pc.createAnswer().then(answer => {
                     pc.setLocalDescription(answer);
                     console.log("Sending answer to %s", payload.by);
                     this.sendMess({
@@ -86,11 +90,11 @@ class App extends React.Component {
         }
     }
 
-    sendMess(message) {
+    sendMess = message => {
         conn.send(JSON.stringify(message))
     }
 
-    getPeerConnection(id) {
+    getPeerConnection = id => {
         let pc = this.state.peerConnections[id];
         if (pc == null) {
             pc = new RTCPeerConnection(null, {
@@ -105,7 +109,7 @@ class App extends React.Component {
                 },
                 ...prevState
             }));
-            pc.onicecandidate = function (event) {
+            pc.onicecandidate = event => {
                 if (event.candidate) {
                     this.sendMess({
                         eventType: MESSAGE,
@@ -134,9 +138,9 @@ class App extends React.Component {
         return pc;
     }
 
-    sendMessage(value) {
+    sendMessage = value => {
         console.log("My message %s", value);
-        this.state.dataChannels.forEach(function (channel) {
+        this.state.dataChannels.forEach(channel => {
             channel.send(value);
         });
         value = "";
