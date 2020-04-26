@@ -9,13 +9,15 @@ class App extends React.Component {
         this.state = {
             peerConnections: {},
             dataChannels: [],
-            currentId: null
+            currentId: null,
+            input: ""
         }
         this.sendMess = this.sendMess.bind(this);
         this.handleMessage = this.handleMessage.bind(this);
         this.makeOffer = this.makeOffer.bind(this);
         this.getPeerConnection = this.getPeerConnection.bind(this);
         this.sendMessage = this.sendMessage.bind(this);
+        this.handleInputChange = this.handleInputChange.bind(this);
     }
 
     componentDidMount() {
@@ -64,6 +66,7 @@ class App extends React.Component {
     handleMessage = payload => {
         let pc = this.getPeerConnection(payload.by);
         let data = payload.data;
+        let peer = this.state.peerConnections;
         switch (payload.type) {
             case "offer":
                 pc.setRemoteDescription(new RTCSessionDescription(data));
@@ -82,10 +85,28 @@ class App extends React.Component {
                 });
                 break;
             case "answer":
-                pc.setRemoteDescription(new RTCSessionDescription(data));
+                pc.setRemoteDescription(new RTCSessionDescription(data)).then(() => {
+                    peer[payload.by] = pc;
+                    this.setState({
+                        ...this.state,
+                        peerConnections: {
+                            ...this.state.peerConnections,
+                            peer
+                        }
+                    });
+                });
                 break;
             case "candidate":
-                pc.addIceCandidate(new RTCIceCandidate(data));
+                pc.addIceCandidate(new RTCIceCandidate(data)).then(() => {
+                    peer[payload.by] = pc;
+                    this.setState({
+                        ...this.state,
+                        peerConnections: {
+                            ...this.state.peerConnections,
+                            peer
+                        }
+                    });
+                });
                 break;
         }
     }
@@ -95,20 +116,22 @@ class App extends React.Component {
     }
 
     getPeerConnection = id => {
-        let pc = this.state.peerConnections[id];
-        if (pc == null) {
-            pc = new RTCPeerConnection(null, {
+        let peer = this.state.peerConnections;
+        if (peer[id] == null) {
+            let pc = new RTCPeerConnection(null, {
                 optional: [{
                     RtpDataChannels: true
                 }]
             });
-            this.setState(prevState => ({
+            console.log(this.state);
+            peer[id] = pc;
+            this.setState({
+                ...this.state,
                 peerConnections: {
-                    ...prevState.peerConnections,
-                    ...pc
+                    ...this.state.peerConnections,
+                    peer
                 },
-                ...prevState
-            }));
+            });
             pc.onicecandidate = event => {
                 if (event.candidate) {
                     this.sendMess({
@@ -125,34 +148,39 @@ class App extends React.Component {
             let dataChannel = pc.createDataChannel("dataChannel", {
                 reliable: true
             });
-            dataChannel.onmessage = function (event) {
+            dataChannel.onmessage = event => {
                 console.log("message from  %s : %s", id, event.data);
             }
             this.setState(prevState => ({
-                dataChannels: {
+                ...prevState,
+                dataChannels: [
                     ...prevState.dataChannels, dataChannel
-                },
-                ...prevState
+                ],
             }));
-        }
-        return pc;
+            console.log(this.state);
+            console.log("DC----" + dataChannel)
+            return pc;
+        } else return peer[id];
     }
 
-    sendMessage = value => {
+    handleInputChange = e => {
+        this.setState({ ...this.state, input: e.target.value });
+    }
+
+    sendMessage = () => {
+        let value = this.state.input;
         console.log("My message %s", value);
         this.state.dataChannels.forEach(channel => {
             channel.send(value);
         });
-        value = "";
     }
 
     render() {
-        let value = document.getElementById("messageInput");
         return (<div className="App">
             <div className="container">
                 <h1>WebRTC Demo</h1>
-                <input id="messageInput" type="text" className="form-control" placeholder="message" />
-                <button type="button" className="btn btn-primary" onClick={() => this.sendMessage(value)}>SEND</button>
+                <input id="messageInput" type="text" className="form-control" placeholder="message" onChange={this.handleInputChange} />
+                <button type="button" className="btn btn-primary" onClick={this.sendMessage}>SEND</button>
             </div>
         </div>
         );
