@@ -7,6 +7,14 @@ repositories {
     mavenCentral()
 }
 
+node {
+    version = '10.15.3'
+
+    npmVersion = '6.4.1'
+
+    download = true
+}
+
 npm_run_build {
     inputs.files fileTree('public')
     inputs.files fileTree('src')
