@@ -1,0 +1,4 @@
+rootProject.name = 'signalling'
+
+include 'backend'
+include 'webRTC-client'

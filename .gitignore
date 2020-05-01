@@ -6,3 +6,31 @@ build
 .project
 bin
 .settings
+out
+.vscode
+node_modules/
+
+# misc
+.DS_Store
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# dependencies
+/.pnp
+.pnp.js
+
+# testing
+/coverage
+
+# production
+/build
+
+webRTC-client/package-lock.json
+webRTC-client/node_modules
+webRTC-client/build_packageWebRTC_client
