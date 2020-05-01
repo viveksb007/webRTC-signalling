@@ -31,4 +31,6 @@ yarn-error.log*
 # production
 /build
 
-frontend/webrtc-client/package-lock.json
+webRTC-client/package-lock.json
+webRTC-client/node_modules
+webRTC-client/build_packageWebRTC_client
