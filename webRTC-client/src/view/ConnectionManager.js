@@ -58,7 +58,12 @@ class ConnectionManager extends React.Component {
     }
 
     createNewPeerAndChannel = (id) => {
-        const pc = new RTCPeerConnection(null, {
+        const configuration = {
+            'iceServers': [{
+                'urls': 'stun:stun.l.google.com:19302'
+            }]
+        };
+        const pc = new RTCPeerConnection(configuration, {
             optional: [{
                 RtpDataChannels: true
             }]
