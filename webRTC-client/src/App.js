@@ -37,12 +37,23 @@ class App extends React.Component {
         this.setState({ input: "" });
     }
 
+    checkKey = (event) => {
+        if (event.key === "Enter") {
+            this.sendMessage();
+        }
+    }
+
     render() {
         return (<div className="App">
             <div className="container">
                 <h1>WebRTC Demo</h1>
-                <input id="messageInput" type="text" className="form-control" placeholder="message" value={this.state.input} onChange={this.handleInputChange} />
-                <button type="button" className="btn btn-primary" onClick={this.sendMessage}>SEND</button>
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    this.sendMessage();
+                }}>
+                    <input id="messageInput" type="text" className="form-control" placeholder="message" value={this.state.input} onChange={this.handleInputChange} />
+                    <button type="button" className="btn btn-primary"> SEND </button>
+                </form>
             </div>
             <HostConnection />
         </div>

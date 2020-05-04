@@ -1,6 +1,6 @@
 const host = window.location.host;
 const protocol = window.location.protocol;
-export const conn = new WebSocket(("https:" === protocol ? "wss://" : "ws://") + host + "/socket");
+export const conn = new WebSocket("https:" === protocol ? "wss://" + host + "/socket" : "ws://localhost:8080/socket");
 
 export const MESSAGE = "MESSAGE";
 export const INIT = "INIT";
