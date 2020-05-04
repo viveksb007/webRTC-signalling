@@ -37,12 +37,6 @@ class App extends React.Component {
         this.setState({ input: "" });
     }
 
-    checkKey = (event) => {
-        if (event.key === "Enter") {
-            this.sendMessage();
-        }
-    }
-
     render() {
         return (<div className="App">
             <div className="container">
