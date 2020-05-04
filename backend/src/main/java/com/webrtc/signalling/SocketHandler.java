@@ -8,16 +8,21 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.socket.CloseStatus;
 import org.springframework.web.socket.TextMessage;
 import org.springframework.web.socket.WebSocketSession;
+import org.springframework.web.socket.handler.ConcurrentWebSocketSessionDecorator;
 import org.springframework.web.socket.handler.TextWebSocketHandler;
 
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
 
 @Component
 public class SocketHandler extends TextWebSocketHandler {
 
     public static final Logger logger = LoggerFactory.getLogger(SocketHandler.class);
-    private final Map<String, WebSocketSession> sessionMap = new ConcurrentHashMap<>();
+    private static final int sendTimeLimit = (int) TimeUnit.SECONDS.toMillis(10);
+    private static final int bufferSizeLimit = 10 * 1024;
+
+    private final Map<String, ConcurrentWebSocketSessionDecorator> sessionMap = new ConcurrentHashMap<>();
     private final Gson gson = new Gson();
 
     @Override
@@ -26,10 +31,7 @@ public class SocketHandler extends TextWebSocketHandler {
         JsonObject data = payload.getAsJsonObject("payload");
         String targetSessionId = data.get("to").getAsString();
         if (sessionMap.containsKey(targetSessionId)) {
-            WebSocketSession targetSession = sessionMap.get(targetSessionId);
-            synchronized (targetSession) {
-                targetSession.sendMessage(message);
-            }
+            sessionMap.get(targetSessionId).sendMessage(message);
             logger.info("Sent message from {} to {}", session.getId(), targetSessionId);
         } else {
             logger.error("Can't find {} in session map", targetSessionId);
@@ -39,7 +41,8 @@ public class SocketHandler extends TextWebSocketHandler {
     @Override
     public void afterConnectionEstablished(WebSocketSession session) throws Exception {
         String sessionId = session.getId();
-        sessionMap.put(sessionId, session);
+        ConcurrentWebSocketSessionDecorator sessionDecorator = new ConcurrentWebSocketSessionDecorator(session, sendTimeLimit, bufferSizeLimit);
+        sessionMap.put(sessionId, sessionDecorator);
         JsonObject identityObject = new JsonObject();
         identityObject.addProperty("eventType", "INIT");
         identityObject.addProperty("id", sessionId);
@@ -48,7 +51,7 @@ public class SocketHandler extends TextWebSocketHandler {
         response.addProperty("eventType", "PEER.CONNECTED");
         response.addProperty("id", sessionId);
         TextMessage responseMessage = new TextMessage(response.toString());
-        for (Map.Entry<String, WebSocketSession> entry : sessionMap.entrySet()) {
+        for (Map.Entry<String, ConcurrentWebSocketSessionDecorator> entry : sessionMap.entrySet()) {
             if (!entry.getValue().getId().equals(sessionId)) {
                 entry.getValue().sendMessage(responseMessage);
             }
