@@ -1,59 +1,34 @@
 import React from 'react';
 import './App.css';
+import { Container } from '@material-ui/core';
+import { ThemeProvider } from '@material-ui/core/styles';
+import { theme } from './styles.js';
+
+import ChatBox from './components/ChatBox.js';
 import Emitter from './service/emitter.js';
-import { ESTABLISH_CONNECTION, START_LISTENING, SET_CHANNELS } from './service/events.js';
+import { ESTABLISH_CONNECTION, START_LISTENING } from './service/events.js';
 import HostConnection from './view/HostConnection.js';
 
 class App extends React.Component {
 
-    constructor(props) {
-        super(props);
-        this.state = {
-            input: "",
-            dataChannels: []
-        };
-        this.handleInputChange = this.handleInputChange.bind(this);
-        this.sendMessage = this.sendMessage.bind(this);
-    }
-
     componentDidMount() {
         Emitter.emit(ESTABLISH_CONNECTION);
         Emitter.emit(START_LISTENING);
-        Emitter.on(SET_CHANNELS, (channels) => {
-            this.setState({ dataChannels: channels })
-        });
-    }
-
-    handleInputChange = e => {
-        this.setState({ input: e.target.value });
-    }
-
-    sendMessage = () => {
-        let value = this.state.input;
-        console.log("My message %s", value);
-        this.state.dataChannels.forEach(channel => {
-            channel.send(value);
-        });
-        this.setState({ input: "" });
     }
 
     render() {
-        return (<div className="App">
-            <div className="container">
-                <h1>WebRTC Demo</h1>
-                <form onSubmit={(e) => {
-                    e.preventDefault();
-                    this.sendMessage();
-                }}>
-                    <input id="messageInput" type="text" className="form-control" placeholder="message" value={this.state.input} onChange={this.handleInputChange} />
-                    <button type="button" className="btn btn-primary"> SEND </button>
-                </form>
+        return (
+            <div className="App">
+                <ThemeProvider theme={theme}>
+                    <Container maxWidth="xl">
+                        <h1>Chat Room</h1>
+                        <ChatBox />
+                    </Container>
+                </ThemeProvider>
+                <HostConnection />
             </div>
-            <HostConnection />
-        </div>
         );
     }
 }
-
 
 export default App;

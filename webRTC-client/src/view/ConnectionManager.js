@@ -1,5 +1,5 @@
 import Emitter from '../service/emitter.js';
-import { payloadType, MESSAGE, INIT, PEER_CONNECTED, REPLY_TO_SERVER, SESSION_ID, SET_CHANNELS } from '../service/events.js'
+import { payloadType, MESSAGE, INIT, PEER_CONNECTED, REPLY_TO_SERVER, MESSAGE_RECEIVED, SET_CHANNELS } from '../service/events.js'
 import React from 'react';
 
 class ConnectionManager extends React.Component {
@@ -86,9 +86,13 @@ class ConnectionManager extends React.Component {
             reliable: true
         });
         dataChannel.onmessage = event => {
-            console.log("message from  %s : %s", id, event.data);
+            const payload = {
+                user: id,
+                message: event.data
+            }
+            Emitter.emit(MESSAGE_RECEIVED, payload);
+            //console.log("message from  %s : %s", id, event.data);
         }
-
         this.setState({
             ...this.state,
             peerConnections: { ...this.state.peerConnections, [id]: pc },
@@ -142,6 +146,7 @@ class ConnectionManager extends React.Component {
                     }, () => { console.log("Successfully added candidate %s", id); });
                 });
                 break;
+            default: console.log("Not a valid case");
         }
     }
 

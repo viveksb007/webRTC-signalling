@@ -28,7 +28,7 @@ class HostConnection extends React.Component {
         });
     }
 
-    listenMessage = (message) => {
+    listenMessage = message => {
         const data = JSON.parse(message.data);
         switch (data.eventType) {
             case constants.INIT:
@@ -40,6 +40,7 @@ class HostConnection extends React.Component {
             case constants.MESSAGE:
                 Emitter.emit(constants.MESSAGE, data);
                 break;
+            default: console.log("Not a valid case");
         }
     }
 

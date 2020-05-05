@@ -11,6 +11,7 @@ export const START_LISTENING = "START_LISTENING";
 export const SESSION_ID = "SESSION_ID";
 export const SET_CHANNELS = "SET_CHANNELS";
 export const GET_ROOM = "GET_ROOM";
+export const MESSAGE_RECEIVED = "MESSAGE_RECEIVED";
 
 export const payloadType = {
     OFFER: "offer",
