@@ -52,12 +52,3 @@ button {
 input {
     margin-top: 1em;
 }
-
-.footer {
-    background: rgb(148, 144, 144);
-    text-align: center;
-    padding: 2%;
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-}
