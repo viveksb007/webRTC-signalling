@@ -11,3 +11,12 @@ export const theme = createMuiTheme({
         },
     },
 });
+
+export const cardStyle = ({
+    cardcontent: {
+        height: "40vh",
+        width: "auto",
+        overflow: "scroll",
+        backgroundColor: lightBlue[100]
+    },
+});
