@@ -1,4 +1,5 @@
-import React from "react"
+import React from "react";
+import {Card, CardMedia} from "@material-ui/core";
 
 class VideoChat extends React.Component {
 
@@ -22,7 +23,17 @@ class VideoChat extends React.Component {
     }
 
     render() {
-        return (<video id="video-chat" ref={this.videoRef} autoPlay={true}/>);
+        const videoStyle = {
+            width: 300,
+            height: 300
+        };
+        return (
+            <Card style={videoStyle}>
+                <CardMedia>
+                    <video id="video-chat" ref={this.videoRef} autoPlay={true} style={videoStyle}/>
+                </CardMedia>
+            </Card>
+        );
     }
 
 }

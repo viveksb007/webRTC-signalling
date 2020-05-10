@@ -1,7 +1,7 @@
 import React from 'react';
-import { MESSAGE_RECEIVED } from '../service/events.js';
+import {MESSAGE_RECEIVED} from '../service/events.js';
 import Emitter from '../service/emitter.js';
-import { List, ListItem, ListItemText } from '@material-ui/core';
+import {List, ListItem, ListItemText} from '@material-ui/core';
 
 class Messages extends React.Component {
 
@@ -42,7 +42,7 @@ class Messages extends React.Component {
                         </ListItem>
                     )
                 }
-                <div ref={this.messagesEnd}></div>
+                <div ref={this.messagesEnd}/>
             </List>
         );
     }
