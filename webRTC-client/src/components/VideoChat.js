@@ -1,6 +1,6 @@
 import React from "react";
-import {Card, CardActions, CardMedia} from "@material-ui/core";
-import {Mic, MicOff, Videocam, VideocamOff} from "@material-ui/icons";
+import { Card, CardActions, CardMedia } from "@material-ui/core";
+import { Mic, MicOff, Videocam, VideocamOff } from "@material-ui/icons";
 import Container from "@material-ui/core/Container";
 
 class VideoChat extends React.Component {
@@ -9,19 +9,26 @@ class VideoChat extends React.Component {
         super(props);
         this.state = {
             audio: true,
-            video: true
+            video: true,
+            stream: null
         };
         this.videoRef = React.createRef();
     }
 
     componentDidMount() {
-        navigator.mediaDevices.getUserMedia({video: true, audio: true})
+        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
             .then(this.handleVideo)
             .catch(this.videoError);
     }
 
-    handleVideo = (stream) => {
-        this.videoRef.current.srcObject = stream;
+    componentDidUpdate() {
+        this.videoRef.current.srcObject = this.state.stream;
+    }
+
+    handleVideo = (src) => {
+        this.setState({ stream: src }, () => {
+            this.videoRef.current.srcObject = this.state.stream;
+        });
     }
 
     videoError = (err) => {
@@ -35,30 +42,38 @@ class VideoChat extends React.Component {
     }
 
     switchVideo = () => {
+        const { stream, video } = this.state
         this.setState({
-            video: !this.state.video,
+            video: !video,
+        }, () => {
+            let tracks = stream.getTracks();
+            if (!this.state.video) {
+                tracks.filter(track => track.kind === "video").map(filteredTrack => filteredTrack.enabled = false);
+            } else {
+                tracks.filter(track => track.kind === "video").map(filteredTrack => filteredTrack.enabled = true);
+            }
         });
     }
 
     render() {
         const videoStyle = {
-            width: 300,
-            height: 300
+            width: "100%",
+            height: "100%"
         };
         return (
-            <Card variant="outlined">
-                <Container maxWidth={"xs"}>
-                    <CardMedia>
-                        <video id="video-chat" ref={this.videoRef} autoPlay={true} style={videoStyle}/>
+            <Container maxWidth="xs" style={{ float: "left" }}>
+                <Card variant="outlined">
+                    <CardMedia src="video">
+                        <video id="video-chat" ref={this.videoRef} muted={!this.state.audio} autoPlay={true} style={videoStyle} />
                     </CardMedia>
                     <CardActions>
-                        {this.state.audio ? <Mic fontSize="large" onClick={this.switchAudio}/> :
-                            <MicOff fontSize="large" onClick={this.switchAudio}/>}
-                        {this.state.video ? <Videocam fontSize="large" onClick={this.switchVideo}/> :
-                            <VideocamOff fontSize="large" onClick={this.switchVideo}/>}
+                        {this.state.audio ? <Mic fontSize="large" onClick={this.switchAudio} /> :
+                            <MicOff fontSize="large" onClick={this.switchAudio} />}
+                        {this.state.video ? <Videocam fontSize="large" onClick={this.switchVideo} /> :
+                            <VideocamOff fontSize="large" onClick={this.switchVideo} />}
                     </CardActions>
-                </Container>
-            </Card>
+                </Card>
+            </Container>
         );
     }
 
