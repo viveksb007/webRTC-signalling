@@ -1,6 +1,6 @@
 import React from "react";
-import { Card, CardActions, CardMedia } from "@material-ui/core";
-import { Mic, MicOff, Videocam, VideocamOff } from "@material-ui/icons";
+import {Card, CardActions, CardMedia} from "@material-ui/core";
+import {Mic, MicOff, Videocam, VideocamOff} from "@material-ui/icons";
 import Container from "@material-ui/core/Container";
 
 class VideoChat extends React.Component {
@@ -16,7 +16,7 @@ class VideoChat extends React.Component {
     }
 
     componentDidMount() {
-        navigator.mediaDevices.getUserMedia({ video: true, audio: true })
+        navigator.mediaDevices.getUserMedia({video: true, audio: true})
             .then(this.handleVideo)
             .catch(this.videoError);
     }
@@ -26,7 +26,7 @@ class VideoChat extends React.Component {
     }
 
     handleVideo = (src) => {
-        this.setState({ stream: src }, () => {
+        this.setState({stream: src}, () => {
             this.videoRef.current.srcObject = this.state.stream;
         });
     }
@@ -42,16 +42,12 @@ class VideoChat extends React.Component {
     }
 
     switchVideo = () => {
-        const { stream, video } = this.state
+        const {stream, video} = this.state
         this.setState({
             video: !video,
         }, () => {
-            let tracks = stream.getTracks();
-            if (!this.state.video) {
-                tracks.filter(track => track.kind === "video").map(filteredTrack => filteredTrack.enabled = false);
-            } else {
-                tracks.filter(track => track.kind === "video").map(filteredTrack => filteredTrack.enabled = true);
-            }
+            let videoTracks = stream.getVideoTracks();
+            videoTracks.forEach(track => track.enabled = this.state.video);
         });
     }
 
@@ -61,16 +57,17 @@ class VideoChat extends React.Component {
             height: "100%"
         };
         return (
-            <Container maxWidth="xs" style={{ float: "left" }}>
+            <Container maxWidth="xs" style={{float: "left"}}>
                 <Card variant="outlined">
                     <CardMedia src="video">
-                        <video id="video-chat" ref={this.videoRef} muted={!this.state.audio} autoPlay={true} style={videoStyle} />
+                        <video id="video-chat" ref={this.videoRef} muted={!this.state.audio} autoPlay={true}
+                               style={videoStyle}/>
                     </CardMedia>
                     <CardActions>
-                        {this.state.audio ? <Mic fontSize="large" onClick={this.switchAudio} /> :
-                            <MicOff fontSize="large" onClick={this.switchAudio} />}
-                        {this.state.video ? <Videocam fontSize="large" onClick={this.switchVideo} /> :
-                            <VideocamOff fontSize="large" onClick={this.switchVideo} />}
+                        {this.state.audio ? <Mic fontSize="large" onClick={this.switchAudio}/> :
+                            <MicOff fontSize="large" onClick={this.switchAudio}/>}
+                        {this.state.video ? <Videocam fontSize="large" onClick={this.switchVideo}/> :
+                            <VideocamOff fontSize="large" onClick={this.switchVideo}/>}
                     </CardActions>
                 </Card>
             </Container>
