@@ -2,6 +2,8 @@ import React from "react";
 import {Card, CardActions, CardMedia} from "@material-ui/core";
 import {Mic, MicOff, Videocam, VideocamOff} from "@material-ui/icons";
 import Container from "@material-ui/core/Container";
+import Emitter from "../service/emitter";
+import {ADD_LOCAL_STREAM} from "../service/events";
 
 class VideoChat extends React.Component {
 
@@ -29,6 +31,7 @@ class VideoChat extends React.Component {
         this.setState({stream: src}, () => {
             this.videoRef.current.srcObject = this.state.stream;
         });
+        Emitter.emit(ADD_LOCAL_STREAM, src);
     }
 
     videoError = (err) => {

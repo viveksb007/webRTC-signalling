@@ -1,5 +1,14 @@
 import Emitter from '../service/emitter.js';
-import { payloadType, MESSAGE, INIT, PEER_CONNECTED, REPLY_TO_SERVER, MESSAGE_RECEIVED, SET_CHANNELS } from '../service/events.js'
+import {
+    ADD_LOCAL_STREAM,
+    INIT,
+    MESSAGE,
+    MESSAGE_RECEIVED,
+    payloadType,
+    PEER_CONNECTED,
+    REPLY_TO_SERVER,
+    SET_CHANNELS
+} from '../service/events.js'
 import React from 'react';
 
 class ConnectionManager extends React.Component {
@@ -7,9 +16,10 @@ class ConnectionManager extends React.Component {
     constructor(props) {
         super(props);
         this.state = {
-            peerConnections: {},
+            peerConnections: new Map(),
             dataChannels: [],
-            currentId: ""
+            currentId: "",
+            stream: null
         };
         this.handleMessage = this.handleMessage.bind(this);
         this.makeOffer = this.makeOffer.bind(this);
@@ -28,6 +38,11 @@ class ConnectionManager extends React.Component {
         });
         Emitter.on(PEER_CONNECTED, data => this.makeOffer(data.id));
         Emitter.on(MESSAGE, data => this.handleMessage(data.payload));
+        Emitter.on(ADD_LOCAL_STREAM, stream => {
+            this.setState({
+                stream: stream
+            });
+        });
     }
 
     makeOffer = id => {
@@ -51,10 +66,9 @@ class ConnectionManager extends React.Component {
 
     getPeerConnection = id => {
         let peer = this.state.peerConnections;
-        if (peer[id] == null) {
-            const p = this.createNewPeerAndChannel(id);
-            return p;
-        } else return peer[id];
+        if (!peer.has(id)) {
+            return this.createNewPeerAndChannel(id);
+        } else return peer.get(id);
     }
 
     createNewPeerAndChannel = (id) => {
@@ -93,9 +107,11 @@ class ConnectionManager extends React.Component {
             Emitter.emit(MESSAGE_RECEIVED, payload);
             //console.log("message from  %s : %s", id, event.data);
         }
+        let peer = this.state.peerConnections;
+        peer.set(id, pc);
         this.setState({
             ...this.state,
-            peerConnections: { ...this.state.peerConnections, [id]: pc },
+            peerConnections: peer,
             dataChannels: [...this.state.dataChannels, dataChannel]
         }, () => {
             Emitter.emit(SET_CHANNELS, this.state.dataChannels);
@@ -143,10 +159,13 @@ class ConnectionManager extends React.Component {
                     peer[id] = pc;
                     this.setState({
                         peerConnections: peer
-                    }, () => { console.log("Successfully added candidate %s", id); });
+                    }, () => {
+                        console.log("Successfully added candidate %s", id);
+                    });
                 });
                 break;
-            default: console.log("Not a valid case");
+            default:
+                console.log("Not a valid case");
         }
     }
 

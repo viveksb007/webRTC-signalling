@@ -12,6 +12,7 @@ export const SESSION_ID = "SESSION_ID";
 export const SET_CHANNELS = "SET_CHANNELS";
 export const GET_ROOM = "GET_ROOM";
 export const MESSAGE_RECEIVED = "MESSAGE_RECEIVED";
+export const ADD_LOCAL_STREAM = "ADD_LOCAL_STREAM";
 
 export const payloadType = {
     OFFER: "offer",
